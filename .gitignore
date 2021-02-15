@@ -1,0 +1,9 @@
+#raw data
+raw/
+
+#processed data
+data/
+
+*.un~
+.ipynb_checkpoints/
+.DS_store
