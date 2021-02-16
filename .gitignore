@@ -7,3 +7,4 @@ data/
 *.un~
 .ipynb_checkpoints/
 .DS_store
+*.gtf.gz
