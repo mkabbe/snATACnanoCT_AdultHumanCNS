@@ -19,3 +19,16 @@ awk 'FNR==NR {a[$1]; next} $1 in a' hg38.chrom.sizes $1/$1.fragments.bed | bedto
 
 bash scripts/SEACR_1.3.sh $1/$1.fragments.bedgraph 0.1 non relaxed $1_SEACR && mv $1_SEACR.relaxed.bed $1/
 bash scripts/SEACR_1.3.sh $1/$1.fragments.bedgraph 0.1 non stringent $1_SEACR && mv $1_SEACR.stringent.bed $1/
+
+## remove intermediate files
+if [[ -s $1/$1.fragments.bedgraph ]]; then
+	rm $1/$1.fragments.bed $1/$1.clean.bed $1/$1.bed $1/$1_namesorted_bam.bam
+elif [[ -s $1/$1.fragments.bed ]]; then
+	rm $1/$1.clean.bed $1/$1.bed $1/$1_namesorted_bam.bam
+elif [[ -s $1/$1.clean.bed ]]; then
+	rm $1/$1.bed $1/$1_namesorted_bam.bam
+elif [[ -s $1/$1.bed ]]; then
+	rm $1/$1_namesorted_bam.bam 
+fi
+
+
