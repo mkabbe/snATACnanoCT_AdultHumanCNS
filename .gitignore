@@ -8,3 +8,5 @@ data/
 .ipynb_checkpoints/
 .DS_store
 *.gtf.gz
+
+__pycache__/

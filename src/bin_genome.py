@@ -2,7 +2,7 @@
 
 import sys 
 
-def binGenome(binsize, stepsize = 0, chromsize_file, outfile):
+def binGenome(binsize, stepsize, chromsize_file, outfile):
     '''
     binsize:  feature window size
     stepsize: overlap size for adjacent windows
