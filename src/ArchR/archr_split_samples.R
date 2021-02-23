@@ -60,6 +60,7 @@ meta <- projATAC@cellColData
 projATAC@sampleMetadata
 
 
+
 df <- getCellColData(projATAC, select = c("log10(nFrags)", "TSSEnrichment"))
 df
 p <- ggPoint(
@@ -118,7 +119,7 @@ plotPDF(p1,p2,p3,p4, name = "QC-Sample-Statistics.pdf",
         width = 4, height = 4)
 
 p1 <- plotFragmentSizes(ArchRProj = projATAC)
-p1
+p1 
 p2 <- plotTSSEnrichment(ArchRProj = projATAC)
 p2
 
