@@ -4,11 +4,11 @@ import os
 import pandas as pd
 
 
-CR_META = pd.read_csv("data/P20057_1004/singlecell.csv", sep=",")
+CR_META = pd.read_csv("data/P20057_1005/singlecell.csv", sep=",")
 CR_META = CR_META[CR_META.is__cell_barcode == 1]
 CR_BCD = CR_META.barcode.to_list()
 
-MK_META = pd.read_csv("data/P20057_1004/MK_pre_singlecell.csv")
+MK_META = pd.read_csv("data/P20057_1005/MK_pre_singlecell.csv")
 MK_BCD = MK_META.barcode.to_list()
 
 print("Cells from cellranger: {} cells.".format(len(CR_BCD)))
