@@ -28,5 +28,5 @@ do
 done
 
 ## merge to get final set of peaks (use to build the feature matrix)
-cat data/epi/cluster_peaks/PADDED*bed | sort -k1,1 -k2,2n | \
-bedtools merge -i stdin > data/epi/cluster_peaks/merged_kmeans_cluster_peaks.bed
+cat data/epi/kmeans_fragments/PADDED*bed | sort -k1,1 -k2,2n | \
+bedtools merge -i stdin > data/epi/kmeans_fragments/merged_kmeans_cluster_peaks.bed
