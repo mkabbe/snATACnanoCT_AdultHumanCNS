@@ -10,3 +10,4 @@ data/
 *.gtf.gz
 
 __pycache__/
+*.gtf

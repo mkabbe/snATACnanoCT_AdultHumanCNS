@@ -26,13 +26,13 @@ GEM_TO_NGI_ID = {"1" : "P20056_1001",
 NGI_ID_TO_GEM = {v: k for k, v in GEM_TO_NGI_ID.items()}
 
 
-annot = epi.ct.load_features(PEAK_PATH)
+#annot = epi.ct.load_features(PEAK_PATH)
 
 ## build the matrix (takes time)
-counts = epi.ct.bld_mtx_fly(tsv_file = FRAG_PATH,
-                            csv_file = CSV_PATH,
-                           annotation = annot,
-                           save = "data/epi/peak_count_matrix.h5ad")
+#counts = epi.ct.bld_mtx_fly(tsv_file = FRAG_PATH,
+#                            csv_file = CSV_PATH,
+#                           annotation = annot,
+#                           save = "data/epi/peak_count_matrix.h5ad")
 
 adata = ad.read("data/epi/peak_count_matrix.h5ad")
 

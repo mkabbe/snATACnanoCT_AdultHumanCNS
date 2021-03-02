@@ -5,6 +5,7 @@ import os
 import pysam
 import argparse
 import gzip
+import csv
 
 
 ## barcodes should be csv with the following format: barcode,cluster
