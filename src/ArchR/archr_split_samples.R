@@ -19,6 +19,7 @@ saveArchRProject(ArchRProj = projATAC,
                  load = FALSE)
 
 
+
 # Create Arrow file
 REL_PATH = "../../../../NGSDATA/scATAC_human_adult_CZI_1/Processed_data/"
 inputFragments <- c(paste0(REL_PATH, "P20056_1001/outs/fragments.tsv.gz"),
@@ -88,7 +89,7 @@ p2 <- plotGroups(
   groupBy = "Sample", 
   colorBy = "cellColData", 
   name = "TSSEnrichment",
-  plotAs = "violin",
+  plotAs = "ridges",
   alpha = 0.6,
   addBoxPlot = TRUE
 )
@@ -108,10 +109,10 @@ p4 <- plotGroups(
   groupBy = "Sample", 
   colorBy = "cellColData", 
   name = "log10(nFrags)",
-  plotAs = "violin",
+  plotAs = "ridges",
   alpha = 0.6,
   addBoxPlot = TRUE
-)  
+)
 p4  
 
 plotPDF(p1,p2,p3,p4, name = "QC-Sample-Statistics.pdf", 
@@ -253,6 +254,23 @@ heatmapGS <- markerHeatmap(
 ComplexHeatmap::draw(heatmapGS, heatmap_legend_side = "bot", 
                      annotation_legend_side = "bot",
                      cluster_rows =TRUE)
+
+
+projATAC <- addImputeWeights(projATAC, k=7,
+                             sampleCells = 500,
+                             td = 10)
+
+
+p5 <- plotEmbedding(
+  ArchRProj = projATAC,
+  colorBy = "GeneScoreMatrix",
+  name = markerGenes,
+  embedding = "UMAPHarmony",
+  imputeWeights = getImputeWeights(projATAC)
+)
+
+p5$AQP4
+
 
 setwd("~/Downloads/PhD/CZI_analysis/ArchR_210218/")
 doubScores <- addDoubletScores(
