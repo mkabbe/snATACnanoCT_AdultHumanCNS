@@ -289,3 +289,72 @@ write.csv(de_doublet_bcd, file = "de_doublet_bcd.csv")
 write.csv(projATAC$cellNames, file = "all_bcd.csv")
 
 deDoubled_proj
+
+
+
+czi_rna <- readRDS("../../../titration_ATAC/cellranger_output/S10-0050_stock/ArchR/luise_Seurat/HCA_small.rds")
+
+czi_rna
+
+DimPlot(czi_rna, reduction = "umap")
+
+colnames(czi_rna@meta.data)
+
+czi_rna@meta.data$rough_annot
+
+projATAC <- addGeneIntegrationMatrix(
+  ArchRProj = projATAC, 
+  useMatrix = "GeneScoreMatrix",
+  matrixName = "GeneIntegrationMatrix",
+  reducedDims = "IterativeLSI",
+  seRNA = czi_rna,
+  addToArrow = FALSE,
+  groupRNA = "rough_annot",
+  nameCell = "predictedCell_Un",
+  nameGroup = "predictedGroup_Un",
+  nameScore = "predictedScore_Un"
+)
+
+getAvailableMatrices(projATAC)
+
+p1 <- plotEmbedding(
+  projATAC, 
+  colorBy = "cellColData", 
+  name = "predictedGroup_Un",
+  embedding = "UMAPHarmony"
+  )
+p1
+
+pathToMacs2 <- "/opt/anaconda3/bin/MACS2"
+
+
+projATAC <- addGroupCoverages(ArchRProj = projATAC, 
+                               groupBy = "predictedGroup_Un"
+							   )
+
+
+							   projATAC <- addReproduciblePeakSet(
+							     ArchRProj = projATAC, 
+							     groupBy = "predictedGroup_Un", 
+							     pathToMacs2 = pathToMacs2
+							   )
+
+
+cell_meta <- projATAC@cellColData
+write.csv(cell_meta, file = "epi/archr_metadata.csv", sep=",")
+
+
+## Took forever to run, and then failed. Issue with directory.
+projATAC <- addReproduciblePeakSet(
+  ArchRProj = projATAC, 
+  groupBy = "predictedGroup_Un", 
+  pathToMacs2 = pathToMacs2
+)
+
+					   							   
+saveArchRProject(ArchRProj = projATAC, 
+                 outputDirectory = "Save-ProjATAC", 
+                 load = FALSE
+				 )
+				 
+			

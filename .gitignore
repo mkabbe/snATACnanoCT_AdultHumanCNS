@@ -13,3 +13,4 @@ __pycache__/
 *.gtf
 figures/
 Untitled*.ipynb
+.Rhistory

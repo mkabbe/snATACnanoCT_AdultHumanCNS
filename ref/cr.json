@@ -1,0 +1,27 @@
+{
+	"samples": ["P20056_1001", 
+		"P20056_1002",
+		"P20056_1003",
+		"P20056_1004",
+		"P20057_1001",
+		"P20057_1002",
+		"P20057_1003",
+		"P20602_1001",
+		"P20602_1002",
+		"P20602_1003",
+		"P20602_1004",
+		"P20602_1005",
+		"P20602_1006",
+		"P20602_1007",
+		"P20603_1001",
+		"P20603_1002",
+		"P20603_1003",
+		"P20603_1004",
+		"P20603_1005",
+		"P20603_1006",
+		"P20603_1007"
+	],
+	"reference": "/home/mukund/cellranger/refdata-cellranger-atac-GRCh38-1.2.0",
+	"cr_count_dir": "/data/proj/GCB_MK/10XATAC/data/scatac/cellranger_COUNT_output",
+	"metadata": "/data/proj/GCB_MK/CZI_"
+}
