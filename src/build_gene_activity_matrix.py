@@ -1,4 +1,8 @@
 #!/bin/python
+import anndata as ad
+import pandas as pd
+import numpy as np
+import sys
 
 ## refactored the _geneactivity() function from episcanpy.api
 ##TODO -> add the gene activity matrix as a new layer to the existing anndata object
@@ -23,6 +27,42 @@ def extractGeneAnnot(gtf_file, upstream = 2000, feature_type = "gene", annotatio
                     else:
                         gtf[line[0]].append([int(line[3]), int(line[4])+upstream, line[-1].split(";")[:-1]])
     return gtf
+
+def extractPromoterCoord(gtf_file, window = 2000, feature_type = "gene", annotation = "HAVANA"):
+    gtf = {}
+    extnd = window//2
+    with open(gtf_file) as f:
+            for line in f:
+                if line[0:2] != "##" and "\t"+feature_type+"\t" in line and "\t"+annotation+"\t" in line:
+                    line = line.rstrip("\n").split("\t")
+                    if line[6] == "+":
+                        if line[0] not in gtf.keys():
+                            gtf[line[0]] = [[int(line[3])-extnd, int(line[3])+extnd, line[-1].split(";")[:-1]]]
+                        else:
+                            gtf[line[0]].append([int(line[3])-extnd, int(line[3])+extnd, line[-1].split(";")[:-1]])
+                    else:
+                        if line[0] not in gtf.keys():
+                            gtf[line[0]] = [[int(line[4])-extnd, int(line[4])+extnd, line[-1].split(";")[:-1]]]
+                        else:
+                            gtf[line[0]].append([int(line[4])-extnd, int(line[4])+extnd, line[-1].split(";")[:-1]])
+    return gtf
+
+
+def regionsToFeatures(coords, bedout):
+    '''
+    write the extracted regions/gene coordinates to a .bed file
+    '''
+    if len(coords.keys()) == 0:
+        print("fragments file not in the specified path\n")
+        sys.exit(1)
+
+    with open(bedout,"w") as _out_:
+        for chrom in gtf.keys():
+            for gene in gtf[chrom]:
+                meta = gene[-1]
+                gene_name = meta[2].lstrip(' gene_name "').rstrip('"')
+                _out_.write(chrom + "\t" + str(gene[0]) + "\t" + str(gene[1]) + "\t" + gene_name + "\n")
+
 
 
 def extractFeatureCoordinates(adata):
@@ -76,7 +116,7 @@ def buildGeneActivityMatrix(adata, raw_adata_features, gtf, feature_type="gene")
     if feature_type=='transcript':
         gene_name = [x[7].lstrip(' transcript_name "').rstrip('"') for x in gene_index]
     else:
-        gene_name = [x[4].lstrip(' gene_name "').rstrip('"') for x in gene_index]
+        gene_name = [x[2].lstrip(' gene_name "').rstrip('"') for x in gene_index]
     metadata_genes = {'gene_id' : [],
                       'transcript_id' : [],
                       'gene_type' : [],
