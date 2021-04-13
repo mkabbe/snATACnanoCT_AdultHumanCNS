@@ -14,4 +14,4 @@ __pycache__/
 figures/
 Untitled*.ipynb
 .Rhistory
-notebooks/*ipynb
+notebooks/
