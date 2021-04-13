@@ -144,3 +144,23 @@ def buildGeneActivityMatrix(adata, raw_adata_features, gtf, feature_type="gene")
     gene_adata.obsm = adata.obsm.copy()
     gene_adata.obsp = adata.obsp.copy()
     return(gene_adata)
+
+
+def addMetageneScores(adata, gene_modules):
+    '''
+    assigns a metagene celltype score to each cell. score is the sum of the reads in the marker genes for each celltype.
+    gene_modules should be a dict: {"OPC": ["SOX10", "PDGFRA", "PTPRZ1"], "ASTRO": ["AQP4", "GFAP"]} 
+    '''
+    
+    celltype_marker_index = {}
+    
+    if "index" not in adata.var.keys():
+        adata.var["index"] = [i for i in range(0,len(adata.var))]
+    
+    
+    for module in gene_modules.keys():
+        celltype_marker_index[module] = []
+        for gene in gene_modules[module]:
+            celltype_marker_index[module].append(adata.var.loc[adata.var["gene_name"] == gene, "index"].iloc[0])
+
+        adata.obs[module+"_score"] = np.sum(adata.X[:,celltype_marker_index[module]], axis=1)
