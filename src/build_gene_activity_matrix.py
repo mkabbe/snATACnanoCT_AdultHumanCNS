@@ -7,10 +7,14 @@ import sys
 ## refactored the _geneactivity() function from episcanpy.api
 ##TODO -> add the gene activity matrix as a new layer to the existing anndata object
 
+
+
 def extractGeneAnnot(gtf_file, upstream = 2000, feature_type = "gene", annotation = "HAVANA"):
     """
-    get coordinates and annotations of genes from a GTF file. Returns dictionary indexed by chromosome
+    get coordinates and annotations of gene body+promoter. 
+    Returns dictionary indexed by chromosome
     """
+    
     gtf = {}
     with open(gtf_file) as f:
         for line in f:
@@ -28,7 +32,14 @@ def extractGeneAnnot(gtf_file, upstream = 2000, feature_type = "gene", annotatio
                         gtf[line[0]].append([int(line[3]), int(line[4])+upstream, line[-1].split(";")[:-1]])
     return gtf
 
+
+
 def extractPromoterCoord(gtf_file, window = 2000, feature_type = "gene", annotation = "HAVANA"):
+    """
+    If metagene=False, extracts all gene promoters. Otherwise, only extracts marker gene promoters.
+    Returns dictionary indexed by chromosome
+    """
+    
     gtf = {}
     extnd = window//2
     with open(gtf_file) as f:
@@ -48,10 +59,12 @@ def extractPromoterCoord(gtf_file, window = 2000, feature_type = "gene", annotat
     return gtf
 
 
-def regionsToFeatures(coords, bedout):
-    '''
+
+def regionsToBED(coords, bedout):
+    """
     write the extracted regions/gene coordinates to a .bed file
-    '''
+    """
+    
     if len(coords.keys()) == 0:
         print("fragments file not in the specified path\n")
         sys.exit(1)
@@ -69,6 +82,7 @@ def extractFeatureCoordinates(adata):
     """
     get coordinates of features from AnnData object. 
     """
+    
     raw_adata = adata.copy()
     raw_adata_features = {}
     feature_index = 0
@@ -81,6 +95,7 @@ def extractFeatureCoordinates(adata):
         feature_index += 1
     return adata_features
     
+
 
 def buildGeneActivityMatrix(adata, raw_adata_features, gtf, feature_type="gene"):
     """
@@ -146,21 +161,36 @@ def buildGeneActivityMatrix(adata, raw_adata_features, gtf, feature_type="gene")
     return(gene_adata)
 
 
+
+def extractMarkerGenes(rna_adata, n_genes = 100):
+    """
+    take in RNA-seq anndata object and give dictionary of marker genes per cluster
+    """
+    
+    if not "rank_genes_groups" in rna_adata.uns.keys():
+        from scanpy.tl import rank_genes_groups
+        rank_genes_groups(rna_adata, groupby = "clusters_named")
+    
+    marker_genes = pd.DataFrame(rna_adata.uns["rank_genes_groups"]["names"], index = None).head(n_genes)
+    return marker_genes.to_dict(orient = "list")
+
+
+
 def addMetageneScores(adata, gene_modules):
-    '''
+    """
     assigns a metagene celltype score to each cell. score is the sum of the reads in the marker genes for each celltype.
     gene_modules should be a dict: {"OPC": ["SOX10", "PDGFRA", "PTPRZ1"], "ASTRO": ["AQP4", "GFAP"]} 
-    '''
+    """
     
     celltype_marker_index = {}
     
     if "index" not in adata.var.keys():
         adata.var["index"] = [i for i in range(0,len(adata.var))]
     
-    
     for module in gene_modules.keys():
         celltype_marker_index[module] = []
         for gene in gene_modules[module]:
-            celltype_marker_index[module].append(adata.var.loc[adata.var["gene_name"] == gene, "index"].iloc[0])
+            if gene in adata.var["gene_name"]:
+                celltype_marker_index[module].append(adata.var.loc[adata.var["gene_name"] == gene, "index"].iloc[0])
 
         adata.obs[module+"_score"] = np.sum(adata.X[:,celltype_marker_index[module]], axis=1)
