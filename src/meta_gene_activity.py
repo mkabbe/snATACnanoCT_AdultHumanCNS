@@ -1,23 +1,21 @@
 #!/bin/python
-import os
-import csv
-import scipy
-import scanpy as sc
 import anndata as ad
-import numpy as np
 import pandas as pd
-import episcanpy.api as epi
+import numpy as np
+import sys
 
+## refactored the _geneactivity() function from episcanpy.api
+##TODO -> add the gene activity matrix as a new layer to the existing anndata object
 
-os.chdir("/data/proj/GCB_MK/CZI/episcanpy_analysis/AGG_ATAC_210218")
 
 
 def extractGeneAnnot(gtf_file, upstream = 2000, feature_type = "gene", annotation = "HAVANA"):
     """
-    get coordinates and annotations of genes from a GTF file. Returns dictionary indexed by chromosome
+    get coordinates and annotations of gene body+promoter. 
+    Returns dictionary indexed by chromosome
     """
-    gtf = {}
     
+    gtf = {}
     with open(gtf_file) as f:
         for line in f:
             if line[0:2] != "##" and "\t"+feature_type+"\t" in line and "\t"+annotation+"\t" in line:
@@ -34,7 +32,14 @@ def extractGeneAnnot(gtf_file, upstream = 2000, feature_type = "gene", annotatio
                         gtf[line[0]].append([int(line[3]), int(line[4])+upstream, line[-1].split(";")[:-1]])
     return gtf
 
+
+
 def extractPromoterCoord(gtf_file, window = 2000, feature_type = "gene", annotation = "HAVANA"):
+    """
+    If metagene=False, extracts all gene promoters. Otherwise, only extracts marker gene promoters.
+    Returns dictionary indexed by chromosome
+    """
+    
     gtf = {}
     extnd = window//2
     with open(gtf_file) as f:
@@ -54,10 +59,30 @@ def extractPromoterCoord(gtf_file, window = 2000, feature_type = "gene", annotat
     return gtf
 
 
+
+def regionsToBED(coords, bedout):
+    """
+    write the extracted regions/gene coordinates to a .bed file
+    """
+    
+    if len(coords.keys()) == 0:
+        print("fragments file not in the specified path\n")
+        sys.exit(1)
+
+    with open(bedout,"w") as _out_:
+        for chrom in gtf.keys():
+            for gene in gtf[chrom]:
+                meta = gene[-1]
+                gene_name = meta[2].lstrip(' gene_name "').rstrip('"')
+                _out_.write(chrom + "\t" + str(gene[0]) + "\t" + str(gene[1]) + "\t" + gene_name + "\n")
+
+
+
 def extractFeatureCoordinates(adata):
     """
     get coordinates of features from AnnData object. 
     """
+    
     raw_adata = adata.copy()
     raw_adata_features = {}
     feature_index = 0
@@ -68,12 +93,15 @@ def extractFeatureCoordinates(adata):
         else:
             raw_adata_features[line[0]].append([int(line[1]),int(line[2]), feature_index])
         feature_index += 1
-    return raw_adata_features
+    return adata_features
+    
 
-def buildGeneActivityMatrix(adata, raw_adata_features, gtf, feature_type):
+
+def buildGeneActivityMatrix(adata, raw_adata_features, gtf, feature_type="gene"):
     """
-    find the features overlaping the genes. and build the count matrix
+    find the features overlaping the genes and build the count matrix
     """
+    
     gene_index = []
     gene_activity_X = []
     raw_adata = adata.copy()
@@ -97,16 +125,13 @@ def buildGeneActivityMatrix(adata, raw_adata_features, gtf, feature_type):
                 if gene_values != []:
                     gene_activity_X.append(np.sum(gene_values, axis=0))
                     gene_index.append(gene[-1])
-                
-
     gene_activity_X = np.concatenate(tuple(gene_activity_X), axis=-1)
-
+    
     # get the variable metadata
     if feature_type=='transcript':
         gene_name = [x[7].lstrip(' transcript_name "').rstrip('"') for x in gene_index]
     else:
         gene_name = [x[2].lstrip(' gene_name "').rstrip('"') for x in gene_index]
-
     metadata_genes = {'gene_id' : [],
                       'transcript_id' : [],
                       'gene_type' : [],
@@ -114,22 +139,20 @@ def buildGeneActivityMatrix(adata, raw_adata_features, gtf, feature_type):
                       'transcript_type' : [],
                       'transcript_name' : [],
                       'protein_id' : []}
-
     for line in gene_index:
         dico_line = {}
         for element in line:
             if ' "' in element:
                 dico_line[element.rstrip('"').lstrip(" ").split(' "')[0]] = element.rstrip('"').lstrip(" ").split(' "')[1]
-    
+                
         for key in metadata_genes.keys():
             if key in dico_line.keys():
                 metadata_genes[key].append(dico_line[key])
             else:
                 metadata_genes[key].append('NA')  
-            
     dataframe_genes = pd.DataFrame.from_dict(metadata_genes)
     dataframe_genes.index = gene_name
-
+    
     #adata.layers[layer_name] = ad.AnnData(gene_activity_X, var=dataframe_genes, obs=raw_adata.obs)
     gene_adata = ad.AnnData(gene_activity_X, var=dataframe_genes, obs=raw_adata.obs)
     gene_adata.uns = adata.uns.copy()
@@ -138,13 +161,39 @@ def buildGeneActivityMatrix(adata, raw_adata_features, gtf, feature_type):
     return(gene_adata)
 
 
-adata = ad.read("data/210421_merged_peak_matrix_RESULTS.h5ad")
-#gtf = extractGeneAnnot(gtf_file="ref/gencode.v35.annotation.gtf")
-gtf = extractPromoterCoord(gtf_file="ref/gencode.v35.annotation.gtf")
-adata_features = extractFeatureCoordinates(adata)
 
-gene_adata = buildGeneActivityMatrix(adata=adata, gtf=gtf, raw_adata_features=adata_features, feature_type="gene")
+def extractMarkerGenes(rna_adata, n_genes = 100):
+    """
+    take in RNA-seq anndata object and give dictionary of marker genes per cluster
+    """
+    if rna_adata.var_names != rna_adata.var["gene_names"]:
+        rna_adata.var_names = rna_adata.var["gene_names"]
 
-#gene_adata.write("210407_LSI-2_gene_activity_matrix.h5ad")
-gene_adata.write("data/210421_promoter_activity_matrix.h5ad")
+    if not "rank_genes_groups" in rna_adata.uns.keys():
+        from scanpy.tl import rank_genes_groups
+        rank_genes_groups(rna_adata, groupby = "clusters_named")
+    
+    marker_genes = pd.DataFrame(rna_adata.uns["rank_genes_groups"]["names"], index = None).head(n_genes)
+    return marker_genes.to_dict(orient = "list")
 
+
+
+def addMetageneScores(adata, gene_modules):
+    """
+    adata should be a GENE_ACTIVITY object -> Output from build_gene_activity_matrix.py
+    assigns a metagene celltype score to each cell. score is the sum of the reads in the marker genes for each celltype.
+    gene_modules should be a dict: {"OPC": ["SOX10", "PDGFRA", "PTPRZ1"], "ASTRO": ["AQP4", "GFAP"]} 
+    """
+    
+    celltype_marker_index = {}
+    
+    if "index" not in adata.var.keys():
+        adata.var["index"] = [i for i in range(0,len(adata.var))]
+    
+    for module in gene_modules.keys():
+        celltype_marker_index[module] = []
+        for gene in gene_modules[module]:
+            if gene in adata.var["gene_name"]:
+                celltype_marker_index[module].append(adata.var.loc[adata.var["gene_name"] == gene, "index"].iloc[0])
+
+        adata.obs[module+"_score"] = np.sum(adata.X[:,celltype_marker_index[module]], axis=1)

@@ -21,8 +21,8 @@ def runTFIDF(adata):
 def removefirstPC(adata):
     # store backup
     adata.obsm["X_pca_all"] = adata.obsm["X_pca"]
-    adata.obsm["pca"]["variance_ratio_all"] = adata.obsm["pca"]["variance_ratio"]
-    data.uns["pca"]["variance_all"] = adata.uns["pca"]["variance"]
+    adata.uns["pca"]["variance_ratio_all"] = adata.uns["pca"]["variance_ratio"]
+    adata.uns["pca"]["variance_all"] = adata.uns["pca"]["variance"]
     # replace
     adata.obsm["X_pca"] = adata.obsm["X_pca"][:,1:]
     adata.uns["pca"]["variance_ratio"] = adata.uns["pca"]["variance_ratio"][1:]
