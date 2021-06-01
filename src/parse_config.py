@@ -4,7 +4,7 @@ import os
 import json 
 
 
-with open("cr2.json") as f:
+with open("cr.json") as f:
     data = json.load(f)
 
 
