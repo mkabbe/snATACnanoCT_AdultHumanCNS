@@ -2,7 +2,7 @@ import os
 import numpy as np
 from itertools import groupby
 from collections import Counter, namedtuple
-import pyfasta
+import pyfaidx
 
 ## Functions adapted from 10X cellranger-atac
 
@@ -79,16 +79,18 @@ class Motifs:
         motif = self.get_motif_of(tf_genes)
         (matrices, thresholds) = self.prepare_moods_settings(motif_path=self.motif_path, bg = self.bg, pseudocount, pvalue)
         
-        (seq, peaks_iter) = self.peak_reader(select=self.peaks) ## pyfasta object containing bin-specific peaks
-         
+        (peak_fa, peaks_iter) = self.peak_reader(select=self.peaks) ## pyfasta object containing bin-specific peaks
         
-        for peak_idx, peak in enumerate(peaks_iter):
-            bed_coord = {'chr': peak[0],
-                         'start': int(peak[1]),
-                         'stop': int(peak[2]),
-                         'name': peak_idx,
-                         'strand': peak[3]}
+        out = open(out_file, "w") 
         
+        for peak_idx, peak in peak_fa.items():
+
+            results = scanner.scan(str(peak))
+            parsed = self.parse_scan_results(results, motif, peak_idx, out_format)
+            
+            out.writelines(['\t'.join(map(str, item)) + '\n' for item in parsed])
+        
+        out.close()
 
     
     def get_motif_of(self, tf_genes):
@@ -160,8 +162,21 @@ class Motifs:
                 outfa.write(f">{peak_name_list[i]}\n")
                 outfa.write(f"{peak_fa_list[i]}\n")
         
-        pyfasta_obj = pyfasta.Fasta("tmp", key_fn=lambda x: x.split()[0])
+        pyfaidx_obj = pyfaidx.Fasta("tmp")
         os.system("rm tmp") # delete the tmp file
         
-        return(pyfasta_obj, peak_iter)
+        return(pyfaidx_obj, peak_iter)
+    
+    @staticmethod
+    def parse_scan_results(moods_scan_res, motifs, bed_coord, out_format="binary-bed"):
         
+        all_hits = []
+        for (motif_idx, hits) in enumerate(moods_scan_res):
+            motif = motifs[motif_idx % len(motifs)]
+            strand = "-" if motif_idx >= len(motifs) else "+"
+        
+        if len(hits) > 0: 
+            record = [bed_coord['chr'], bed_coord['start'], bed_coord['stop'], motif.name]
+            all_hits.append(record)
+            continue
+        return all_hits
