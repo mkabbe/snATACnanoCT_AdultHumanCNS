@@ -74,7 +74,3 @@ for gc in GCbins:
 
 ## MOODS needs to be run on each bin separately. 
 chunk_bins = [{'skip': False, 'GCdict': GCdict_paths[chunk]} for chunk in GCbins]
-
-
-
-    
