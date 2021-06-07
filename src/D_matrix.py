@@ -38,7 +38,7 @@ for gene in gene_dict.keys():
         peak_index +=1
         peak_chrom = peak_dict[peak][0] 
         if peak_chrom != gene_chrom: ## no overlap if on different chromosomes 
-            break
+            continue ## go to next peak
         else:
             peak_start = int(peak_dict[peak][1])
             peak_end = int(peak_dict[peak][2])
