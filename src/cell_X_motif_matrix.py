@@ -22,7 +22,8 @@ cp_adata.layers["normalized"] = cp_adata.X.copy() ## store the normalized counts
 cp_adata.X = cp_adata.layers["raw_peak_counts"] ## load the raw counts layer
 
 ## CELL X MOTIF 
-cm_mtx = cp_adata.X * pm_adata.X
+cm_mtx = cp_adata.layers["raw_peak_counts"] * pm_adata.layers["binary_motif_counts"]    ## clear and explicit
+#cm_mtx = cp_adata.X * pm_adata.X
 
 cm = ad.AnnData(cm_mtx, 
                 obs=cp_adata.obs.copy(), 

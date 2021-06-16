@@ -59,7 +59,7 @@ for filename in os.listdir("GCdict_dump/"):
         
     out.close()
 
-MERGE_RESULTS = '''cat moods_bin_results/* | sort -k 1,1 -k2,2 | awk 'OFS="\t" {print($1"_"$2"_"$3,$4) > moods_results_all.bed'''
+MERGE_RESULTS = '''cat moods_bin_results/* | sort -k 1,1 -k2,2 | awk 'OFS="\t" {print($1"_"$2"_"$3,$4) > sorted_merged_results.txt'''
 os.system(MERGE_RESULTS)
 
 
@@ -96,7 +96,7 @@ for motif in motif_list:
     
 
 ## build PEAK x MOTIF matrix
-PM = lil_matrix((len(all_peaks), len(motif_list)))
+PM = lil_matrix((len(peak_dict), len(motif_dict)))
 
 for p in peak_motif_dict.keys():
     for m in peak_motif_dict[p]:
