@@ -1,7 +1,12 @@
 #!/bin/python
+import os
+import csv
+import scipy
+import scanpy as sc
 import anndata as ad
 import pandas as pd
 import numpy as np
+import episcanpy.api as epi
 import sys
 
 ## refactored the _geneactivity() function from episcanpy.api
@@ -93,7 +98,7 @@ def extractFeatureCoordinates(adata):
         else:
             raw_adata_features[line[0]].append([int(line[1]),int(line[2]), feature_index])
         feature_index += 1
-    return adata_features
+    return raw_adata_features
     
 
 
@@ -160,40 +165,45 @@ def buildGeneActivityMatrix(adata, raw_adata_features, gtf, feature_type="gene")
     gene_adata.obsp = adata.obsp.copy()
     return(gene_adata)
 
-
-
 def extractMarkerGenes(rna_adata, n_genes = 100):
     """
     take in RNA-seq anndata object and give dictionary of marker genes per cluster
+    marker genes are selected by logfold change
     """
-    if rna_adata.var_names != rna_adata.var["gene_names"]:
-        rna_adata.var_names = rna_adata.var["gene_names"]
+    #if rna_adata.var_names != rna_adata.var["gene_names"]:
+    rna_adata.var_names = rna_adata.var["gene_names"]
 
     if not "rank_genes_groups" in rna_adata.uns.keys():
         from scanpy.tl import rank_genes_groups
         rank_genes_groups(rna_adata, groupby = "clusters_named")
     
-    marker_genes = pd.DataFrame(rna_adata.uns["rank_genes_groups"]["names"], index = None).head(n_genes)
-    return marker_genes.to_dict(orient = "list")
+    result = rna_adata.uns["rank_genes_groups"]
+    groups = result['names'].dtype.names
+    marker_genes = {}
+    for group in groups:
+        marker_genes[group] =pd.DataFrame(
+            {key: result[key][group] 
+             for key in ["names", "logfoldchanges"]}).head(n_genes).sort_values(by=["logfoldchanges"], ascending=False)["names"].tolist()
+    return marker_genes
 
-
-
-def addMetageneScores(adata, gene_modules):
+def addMetageneScores(adata, gene_modules, n_markers=10):
     """
     adata should be a GENE_ACTIVITY object -> Output from build_gene_activity_matrix.py
     assigns a metagene celltype score to each cell. score is the sum of the reads in the marker genes for each celltype.
     gene_modules should be a dict: {"OPC": ["SOX10", "PDGFRA", "PTPRZ1"], "ASTRO": ["AQP4", "GFAP"]} 
     """
-    
-    celltype_marker_index = {}
-    
+
     if "index" not in adata.var.keys():
         adata.var["index"] = [i for i in range(0,len(adata.var))]
     
+    max_markers = min([len(gene_modules[k]) for k in gene_modules.keys()])
+    n_markers = max_markers if n_markers > max_markers else n_markers
+
+    celltype_marker_index = {}
     for module in gene_modules.keys():
         celltype_marker_index[module] = []
         for gene in gene_modules[module]:
             if gene in adata.var["gene_name"]:
                 celltype_marker_index[module].append(adata.var.loc[adata.var["gene_name"] == gene, "index"].iloc[0])
-
+        
         adata.obs[module+"_score"] = np.sum(adata.X[:,celltype_marker_index[module]], axis=1)
