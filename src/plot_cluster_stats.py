@@ -15,6 +15,11 @@ p1 = sns.displot(adata.obs, x="louvain", hue="Tissue", multiple="stack")
 p2 = sns.displot(adata.obs, x="louvain", hue="NGI_ID", multiple="stack")
 p3 = sns.displot(adata.obs, x="louvain", hue="caseNO", multiple="stack")
 
+## stacked percentage bar plots 
+grp_df = adata.obs.groupby(['louvain','Tissue'])['barcode'].count().unstack().T
+plt_df = grp_df.div(grp_df.sum())
+p1 = plt_df.T.plot(kind='bar', stacked=True, rot=1, figsize=(6,6),ylabel="fraction", edgecolor="black", width = 0.9, colormap="coolwarm", alpha=0.5);
+
 
 # pie chart
 labels = ['CB', 'BA4', 'CSC']
