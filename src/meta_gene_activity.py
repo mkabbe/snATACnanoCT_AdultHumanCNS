@@ -165,10 +165,11 @@ def buildGeneActivityMatrix(adata, raw_adata_features, gtf, feature_type="gene")
     gene_adata.obsp = adata.obsp.copy()
     return(gene_adata)
 
-def extractMarkerGenes(rna_adata, n_genes = 100):
+def extractMarkerGenes(rna_adata, n_genes = 100, write_no_return=False):
     """
     take in RNA-seq anndata object and give dictionary of marker genes per cluster
     marker genes are selected by logfold change
+    if write_only set to True, does not return dictionary, but writes marker gene coordinates to file
     """
     #if rna_adata.var_names != rna_adata.var["gene_names"]:
     rna_adata.var_names = rna_adata.var["gene_names"]
@@ -184,7 +185,29 @@ def extractMarkerGenes(rna_adata, n_genes = 100):
         marker_genes[group] =pd.DataFrame(
             {key: result[key][group] 
              for key in ["names", "logfoldchanges"]}).head(n_genes).sort_values(by=["logfoldchanges"], ascending=False)["names"].tolist()
-    return marker_genes
+    if not write_no_return:
+        return marker_genes
+        
+    ctype_markers = marker_genes
+    Oligo_markers = set(ctype_markers["Oligo"])
+    OPC_markers = set(ctype_markers["OPC"])
+    Astro_markers = set(ctype_markers["Astrocyte_1"]+ctype_markers["Astrocyte_2"]+ctype_markers["Astrocyte_3"]+ctype_markers["Astrocyte_4"])
+    MiGl_markers = set(ctype_markers["Microglia-Macrophages_1"]+ctype_markers["Microglia-Macrophages_2"])
+    CB_Ex_Neu_markers = set(ctype_markers["Neuron_RELN+_1"]+ctype_markers["Neuron_RELN+_2"]+ctype_markers["Neuron_RELN+_3"])
+    Ex_Neu_markers = set(ctype_markers["Neuron_Ex_1"]+ctype_markers["Neuron_Ex_2"]+ctype_markers["Neuron_Ex_3"])
+    In_Neu_markers = set(ctype_markers["Neuron_In_1"]+ctype_markers["Neuron_In_2"]+ctype_markers["Neuron_In_3"]+ctype_markers["Neuron_In_4"])
+
+    marker_dict = {}
+    celltypes = ["Oligo", "OPC", "Astro", "MiGl", "CB_Ex_Neu", "Ex_Neu", "In_Neu"]
+    for c in celltypes:
+        marker_dict[c] = locals()[c+"_markers"]
+
+    for c in marker_dict.keys():
+        with open("ref/gene_promoters.bed","r") as infile:
+            with open(f"data/cluster_fragments/markers/{c}_markers.bed","w") as outfile:
+                for line in infile:
+                    if line.strip().split("\t")[-1] in marker_dict[c]:
+                        outfile.write(line)
 
 def addMetageneScores(adata, gene_modules, n_markers=10):
     """
