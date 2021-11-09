@@ -8,7 +8,7 @@ import scipy
 import anndata as ad
 import episcanpy.api as epi
 from motif_utils import *
-
+from scipy.sparse import lil_matrix
 
 os.chdir("/data/proj/GCB_MK/CZI/episcanpy_analysis/AGG_ATAC_210218/data/motif/")
 
@@ -64,7 +64,7 @@ for filename in os.listdir("GCdict_dump/"):
         
     out.close()
 
-MERGE_RESULTS = '''cat moods_bin_results/* | sort -k 1,1 -k2,2 | awk 'OFS="\t" {print($1"_"$2"_"$3,$4) > sorted_merged_results.txt'''
+MERGE_RESULTS = '''cat moods_bin_results/* | sort -k 1,1 -k2,2 | awk 'OFS="\t" {print($1"_"$2"_"$3,$4)}' > sorted_merged_results.txt'''
 os.system(MERGE_RESULTS)
 
 
