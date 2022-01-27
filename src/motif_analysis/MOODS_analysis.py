@@ -76,7 +76,7 @@ with open(peak_file, "r") as p:
     peak_idx = -1
     for line in p:
         peak_idx+=1
-        line = "_".join(line.strip().split("\t"))
+        line = "_".join(line.strip().split("\t")[:3])
         peak_dict[line] = peak_idx
         
 ## store peak_motif matches
