@@ -1,10 +1,20 @@
+#!/bin/bash -l
+#SBATCH -A snic2021-22-1020
+#SBATCH -p core
+#SBATCH -n 16
+#SBATCH -t 2-0
+#SBATCH -J IterativePeaks_CLUST_NAME
+#SBATCH -e logs/err_CLUST_NAME.err -o logs/out_CLUST_NAME.out
+#SBATCH --mail-user=mukund.kabbe@ki.se --mail-type=BEGIN,END
+
+module load bioinfo-tools BEDTools/2.29.2 ## rackham specific
 
 ### Do Iterative clustering on cluster-specific peaks
-
 
 ## specify cluster name for running on condor separately
 CLUSTER=$1
 mkdir -p __tmp__$CLUSTER ## temp folders for each cluster
+mkdir -p logs/Iter
 cd __tmp__$CLUSTER
 
 ## iterate through all chromosomes
@@ -16,7 +26,7 @@ do
 	SECONDS=0 
 	
 	## Select chromosome, sort by summit start position and then by score
-	grep chr$i ../data/peaks/lsi1_leiden_$CLUSTER.bed_summits.bed | sort -k1,1V -k2,2n -k3,5n > TMP.bed
+	grep -w chr$i ../data/peaks/lsi1_leiden_$CLUSTER.bed_summits.bed | sort -k1,1V -k2,2n -k3,5n > TMP.bed
 	
 	total_peaks=$(cat TMP.bed | wc -l)	
 	echo "** chr$i : $total_peaks total peaks **" >> iter.log	
@@ -34,7 +44,7 @@ do
 
 		## Track number of peaks left
 		peaks_left=$(cat PEAK.bed | wc -l)
-		if [[ $(($peaks_left % 5000)) -eq 0 ]]; ## print every 5000 peaks
+		if [[ $(($peaks_left % 50000)) -eq 0 ]]; ## print every 50000 peaks
 		then
 			echo "$peaks_left peaks left" >> iter.log
 		fi
@@ -48,7 +58,10 @@ do
 	
 	## add to the final peak file
 	cat IterPeak.bed >> ../data/peaks/FILTERED_lsi1_leiden_$CLUSTER.bed_summits.bed
+	rm IterPeak.bed ## clear peak file for next chromosome
 done
 
-#cd ..
-#rm -r __tmp__$CLUSTER #delete tmp folder
+mv iter.log ../logs/Iter/iter_log_$CLUSTER.log ## store logs in different folder
+
+cd ..
+rm -r __tmp__$CLUSTER #delete tmp folder
