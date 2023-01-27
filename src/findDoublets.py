@@ -59,3 +59,5 @@ start = time.perf_counter()
 for s in samples:
     runScrublet(s)
 print(f"SCRUBLET TOTAL TIME: {round((time.perf_counter()-start),2)} seconds")
+
+

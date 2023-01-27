@@ -30,7 +30,7 @@ count.matrix.peaks <- FeatureMatrix(fragments = FRAGMENTS,
 chrom_assay <- CreateChromatinAssay(
   counts = count.matrix.peaks,
   sep = c(":","-"),
-  genome = "hg38",
+  genome = "hg19",
   fragments = FRAGMENTS,
   min.cells = 1,
   min.features = 10
