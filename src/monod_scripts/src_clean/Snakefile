@@ -1,0 +1,36 @@
+import os
+
+CWD = os.getcwd()
+REF = os.path.join(CWD, "ref")
+CR_DATA = "/data/proj/GCB_MK/10XATAC/data/scatac/cellranger_COUNT_output/"
+
+
+samples = [x for x in os.listdir(CR_DATA) if "P22551" in x]
+
+rule all:
+	input:
+		## Get TSS scores for all samples (and plot)
+		expand("tss_scores/{sample}_TSS_obs.csv", sample=samples),
+		expand("tss_scores/plots/{sample}_TSSvFrag_QC_plot.pdf", sample=samples)#,
+#		expand("cellranger_COUNT_ouptut/{sample}/outs/singlecell_qc.csv", sample=samples)
+
+rule tss_scores:
+	input:
+		#		"cellranger_COUNT_output/{sample}/outs/fragments.tsv.gz"
+		CR_DATA + "{sample}/outs/fragments.tsv.gz"
+	output:
+		"tss_scores/{sample}_TSS_obs.csv",
+		"tss_scores/plots/{sample}_TSSvFrag_QC_plot.pdf"
+	params:
+		script = "src/src_clean/fast_QC.py"
+	shell:
+		"python {params.script} {input}"
+	
+
+rule filter_samples:
+	output:
+		"cellranger_COUNT_ouptut/{sample}/outs/singlecell_qc.csv"
+	params:
+		script = "src/src_clean/QC_filtering.py"
+	shell:
+		"python {params.script}"
