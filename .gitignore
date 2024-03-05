@@ -4,14 +4,24 @@ raw/
 #processed data
 data/
 
+notebooks/
+
 *.un~
 .ipynb_checkpoints/
 .DS_store
 *.gtf.gz
-
+*html
 __pycache__/
 *.gtf
 figures/
 Untitled*.ipynb
 .Rhistory
-notebooks/
+notebooks_incomplete/
+*.idx
+bedGraphToBigWig
+
+*_binned_*
+*_mm10.bed
+*GRCh38*bed
+
+ucsc_data/

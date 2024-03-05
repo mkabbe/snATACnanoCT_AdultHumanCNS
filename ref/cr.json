@@ -38,7 +38,15 @@
         "P20908_1016",
         "P20908_1017",
         "P20908_1018",
-        "P20908_1019"
+        "P20908_1019",
+        "P22551_1001",
+        "P22551_1002",
+        "P22551_1003",
+        "P22551_1004",
+        "P22551_1005",
+        "P22551_1006",
+        "P22551_1007",
+        "P22551_1008"
 	],
 	"reference": "/home/mukund/cellranger/refdata-cellranger-atac-GRCh38-1.2.0",
 	"cr_count_dir": "/data/proj/GCB_MK/10XATAC/data/scatac/cellranger_COUNT_output",
