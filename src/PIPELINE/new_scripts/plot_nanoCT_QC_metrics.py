@@ -70,15 +70,16 @@ df.index = [x for x in range(len(df))]
 fig, axs = plt.subplots(1,2)
 
 sns.violinplot(data=df, y="log_nb_features",x="modality", bw=0.2, width=0.4, 
-               palette=["green","turquoise"], gridsize=50,inner=None,ax=axs[0])
+               palette=["limegreen","tomato"], gridsize=50,inner="box",ax=axs[0])
 
 sns.violinplot(data=df, y="FRiP",x="modality", bw=0.2, width=0.4, 
-               palette=["green","turquoise"], gridsize=50,inner=None, ax=axs[1])
+               palette=["limegreen","tomato"], gridsize=50,inner="box", ax=axs[1])
 
-axs[0].set(xlabel="modality", ylabel="log10(unique fragments)")
+axs[0].set(xlabel="modality", ylabel="Feature counts($log_{10}$)")
 axs[1].set(xlabel="modality", ylabel="FRiP")
 sns.despine()
+
+plt.savefig(f"plots/nanoCT_{proj}_modality_QC_violinplots.png", dpi=400, bbox_inches="tight")
+
 plt.tight_layout()
 
-plt.savefig(f"plots/nanoCT_{proj}_modality_QC_violinplots.pdf")
-plt.savefig(f"plots/nanoCT_{proj}_modality_QC_violinplots.svg")
