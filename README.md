@@ -1,6 +1,6 @@
 # Single-nuclei histone modification profiling of the adult human central nervous system unveils epigenetic memory of developmental programs
 
-snATAC-seq, multimodal nanoCUT&Tag and Micro-C Analysis scripts from Kabbe et.al. 2024 (doi XXXX)
+snATAC-seq, multimodal nanoCUT&Tag and Micro-C Analysis from Kabbe et.al. 2024 (doi XXXX)
 
 All code used to generate the figures can be found in:
 ###### src/analysis_PIPELINE_scripts
